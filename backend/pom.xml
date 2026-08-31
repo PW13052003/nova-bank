@@ -32,7 +32,17 @@
     </dependencies>
 
     <build>
-        <finalName>nova-bank-backend</finalName>
+    <finalName>nova-bank-backend</finalName>
+    <plugins>
+        <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>3.6.3</version>
+            <configuration>
+                <mainClass>com.novabank.BankApplication</mainClass>
+            </configuration>
+        </plugin>
+    </plugins>
     </build>
 
 </project>
