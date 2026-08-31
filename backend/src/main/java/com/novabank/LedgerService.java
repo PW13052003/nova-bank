@@ -1,11 +1,12 @@
 package com.novabank;
-
+import org.springframework.stereotype.Service;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
+@Service
 public class LedgerService {
 
     public long getBalance(UUID accountId) throws SQLException, java.io.IOException {
