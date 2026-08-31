@@ -1,13 +1,14 @@
 package com.novabank;
 
 import at.favre.lib.crypto.bcrypt.BCrypt;
-
+import org.springframework.stereotype.Service;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
+@Service
 public class UserService {
 
     public UUID signup(String email, String password, String fullName) throws SQLException, java.io.IOException {

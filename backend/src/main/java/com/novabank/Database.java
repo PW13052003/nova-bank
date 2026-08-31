@@ -23,9 +23,9 @@ public class Database {
 
     public static Connection getConnection() throws SQLException, IOException {
         Properties props = loadConfig();
-        String url = props.getProperty("db.url");
-        String username = props.getProperty("db.username");
-        String password = props.getProperty("db.password");
+        String url = props.getProperty("spring.datasource.url");
+        String username = props.getProperty("spring.datasource.username");
+        String password = props.getProperty("spring.datasource.password");
         return DriverManager.getConnection(url, username, password);
     }
 }
