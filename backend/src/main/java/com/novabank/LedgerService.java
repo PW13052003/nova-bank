@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -199,6 +201,33 @@ public class LedgerService {
                 conn.rollback();
                 throw e;
             }
+        }
+    }
+
+    public List<Map<String, Object>> getTransactionHistory(UUID accountId) throws SQLException, java.io.IOException {
+        String sql = "SELECT t.id, t.type, t.status, t.description, l.amount_cents, l.balance_after, t.created_at " +
+                "FROM ledger_entries l JOIN transactions t ON t.id = l.transaction_id " +
+                "WHERE l.account_id = ? ORDER BY t.created_at DESC";
+
+        try (Connection conn = Database.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setObject(1, accountId);
+            ResultSet rs = stmt.executeQuery();
+
+            List<Map<String, Object>> history = new java.util.ArrayList<>();
+            while (rs.next()) {
+                history.add(Map.of(
+                        "transactionId", rs.getObject("id").toString(),
+                        "type", rs.getString("type"),
+                        "status", rs.getString("status"),
+                        "description", rs.getString("description") == null ? "" : rs.getString("description"),
+                        "amountCents", rs.getLong("amount_cents"),
+                        "balanceAfter", rs.getLong("balance_after"),
+                        "createdAt", rs.getTimestamp("created_at").toString()
+                ));
+            }
+            return history;
         }
     }
 }

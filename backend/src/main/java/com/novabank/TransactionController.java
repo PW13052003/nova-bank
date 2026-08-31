@@ -88,4 +88,23 @@ public class TransactionController {
             return ResponseEntity.internalServerError().body(Map.of("error", "Transfer failed"));
         }
     }
+
+    @GetMapping("/accounts/{accountId}/transactions")
+    public ResponseEntity<?> getTransactionHistory(@PathVariable String accountId, Authentication authentication) {
+        try {
+            UUID userId = (UUID) authentication.getPrincipal();
+            UUID accountUuid = UUID.fromString(accountId);
+
+            if (!accountService.isOwnedBy(accountUuid, userId)) {
+                return ResponseEntity.status(403).body(Map.of("error", "You do not own this account"));
+            }
+
+            return ResponseEntity.ok(ledgerService.getTransactionHistory(accountUuid));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid account ID"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(Map.of("error", "Failed to fetch transaction history"));
+        }
+    }
 }
