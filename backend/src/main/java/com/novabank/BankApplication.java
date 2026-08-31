@@ -1,4 +1,4 @@
-package com.bankapp;
+package com.novabank;
 
 public class BankApplication {
 

@@ -1,4 +1,4 @@
-# Bank App
+# Nova Bank
 
 Full-stack banking system built end to end to learn how backend, database, and security concerns fit together in a real financial system.
 

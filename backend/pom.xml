@@ -5,8 +5,8 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.bankapp</groupId>
-    <artifactId>bank-app-backend</artifactId>
+    <groupId>com.novabank</groupId>
+    <artifactId>nova-bank-backend</artifactId>
     <version>0.1.0</version>
     <packaging>jar</packaging>
 
@@ -32,7 +32,7 @@
     </dependencies>
 
     <build>
-        <finalName>bank-app-backend</finalName>
+        <finalName>nova-bank-backend</finalName>
     </build>
 
 </project>
