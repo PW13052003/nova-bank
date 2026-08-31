@@ -60,4 +60,17 @@ public class AccountService {
             return accounts;
         }
     }
+
+    public boolean isOwnedBy(UUID accountId, UUID userId) throws SQLException, java.io.IOException {
+        String sql = "SELECT 1 FROM accounts WHERE id = ? AND user_id = ?";
+
+        try (Connection conn = Database.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setObject(1, accountId);
+            stmt.setObject(2, userId);
+            ResultSet rs = stmt.executeQuery();
+            return rs.next();
+        }
+    }
 }
