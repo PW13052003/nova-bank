@@ -8,14 +8,17 @@ public class BankApplication {
         LedgerService ledgerService = new LedgerService();
         UUID checkingAccountId = UUID.fromString("6df565e6-8b22-4b78-b5e7-ac684b8f6423");
 
+        UUID withdrawalId = ledgerService.withdraw(checkingAccountId, 3000, "withdraw-test-001");
+        System.out.println("Withdrawal transaction id: " + withdrawalId);
+        System.out.println("Balance after withdrawal: " + ledgerService.getBalance(checkingAccountId) + " cents");
+
         try {
-            ledgerService.deposit(checkingAccountId, 10000, "deposit-test-001");
-            System.out.println("Deposit succeeded (this should NOT happen)");
-        } catch (java.sql.SQLException e) {
-            System.out.println("Deposit correctly rejected: " + e.getMessage());
+            ledgerService.withdraw(checkingAccountId, 999999, "withdraw-test-002");
+            System.out.println("Overdraft succeeded (this should NOT happen)");
+        } catch (IllegalStateException e) {
+            System.out.println("Overdraft correctly rejected: " + e.getMessage());
         }
 
-        long balance = ledgerService.getBalance(checkingAccountId);
-        System.out.println("Balance after retry attempt: " + balance + " cents");
+        System.out.println("Final balance: " + ledgerService.getBalance(checkingAccountId) + " cents");
     }
 }

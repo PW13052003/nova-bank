@@ -72,4 +72,52 @@ public class LedgerService {
             return rs.getLong("balance");
         }
     }
+
+    public UUID withdraw(UUID accountId, long amountCents, String idempotencyKey) throws SQLException, java.io.IOException {
+        if (amountCents <= 0) {
+            throw new IllegalArgumentException("Withdrawal amount must be positive");
+        }
+
+        try (Connection conn = Database.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try {
+                long currentBalance = getBalanceWithinTransaction(conn, accountId);
+
+                if (currentBalance < amountCents) {
+                    conn.rollback();
+                    throw new IllegalStateException("Insufficient balance");
+                }
+
+                String txnSql = "INSERT INTO transactions (idempotency_key, type, status, description) " +
+                        "VALUES (?, 'WITHDRAWAL', 'COMPLETED', 'Withdrawal') RETURNING id";
+                UUID transactionId;
+                try (PreparedStatement txnStmt = conn.prepareStatement(txnSql)) {
+                    txnStmt.setString(1, idempotencyKey);
+                    ResultSet txnRs = txnStmt.executeQuery();
+                    txnRs.next();
+                    transactionId = (UUID) txnRs.getObject("id");
+                }
+
+                long newBalance = currentBalance - amountCents;
+
+                String ledgerSql = "INSERT INTO ledger_entries (transaction_id, account_id, amount_cents, balance_after) " +
+                        "VALUES (?, ?, ?, ?)";
+                try (PreparedStatement ledgerStmt = conn.prepareStatement(ledgerSql)) {
+                    ledgerStmt.setObject(1, transactionId);
+                    ledgerStmt.setObject(2, accountId);
+                    ledgerStmt.setLong(3, -amountCents);
+                    ledgerStmt.setLong(4, newBalance);
+                    ledgerStmt.executeUpdate();
+                }
+
+                conn.commit();
+                return transactionId;
+
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            }
+        }
+    }
 }
