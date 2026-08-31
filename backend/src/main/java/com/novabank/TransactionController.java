@@ -39,4 +39,53 @@ public class TransactionController {
             return ResponseEntity.internalServerError().body(Map.of("error", "Deposit failed"));
         }
     }
+
+    @PostMapping("/withdraw")
+    public ResponseEntity<?> withdraw(@RequestBody Map<String, Object> body, Authentication authentication) {
+        try {
+            UUID userId = (UUID) authentication.getPrincipal();
+            UUID accountId = UUID.fromString((String) body.get("accountId"));
+            long amountCents = Long.parseLong(body.get("amountCents").toString());
+            String idempotencyKey = (String) body.get("idempotencyKey");
+
+            if (!accountService.isOwnedBy(accountId, userId)) {
+                return ResponseEntity.status(403).body(Map.of("error", "You do not own this account"));
+            }
+
+            UUID transactionId = ledgerService.withdraw(accountId, amountCents, idempotencyKey);
+            return ResponseEntity.ok(Map.of("transactionId", transactionId.toString()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(Map.of("error", "Withdrawal failed"));
+        }
+    }
+
+    @PostMapping("/transfer")
+    public ResponseEntity<?> transfer(@RequestBody Map<String, Object> body, Authentication authentication) {
+        try {
+            UUID userId = (UUID) authentication.getPrincipal();
+            UUID fromAccountId = UUID.fromString((String) body.get("fromAccountId"));
+            UUID toAccountId = UUID.fromString((String) body.get("toAccountId"));
+            long amountCents = Long.parseLong(body.get("amountCents").toString());
+            String idempotencyKey = (String) body.get("idempotencyKey");
+
+            if (!accountService.isOwnedBy(fromAccountId, userId)) {
+                return ResponseEntity.status(403).body(Map.of("error", "You do not own the source account"));
+            }
+
+            UUID transactionId = ledgerService.transfer(fromAccountId, toAccountId, amountCents, idempotencyKey);
+            return ResponseEntity.ok(Map.of("transactionId", transactionId.toString()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(Map.of("error", "Transfer failed"));
+        }
+    }
 }
