@@ -1,0 +1,75 @@
+package com.novabank;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.UUID;
+
+public class LedgerService {
+
+    public long getBalance(UUID accountId) throws SQLException, java.io.IOException {
+        String sql = "SELECT COALESCE(SUM(amount_cents), 0) AS balance FROM ledger_entries WHERE account_id = ?";
+
+        try (Connection conn = Database.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setObject(1, accountId);
+            ResultSet rs = stmt.executeQuery();
+            rs.next();
+            return rs.getLong("balance");
+        }
+    }
+
+    public UUID deposit(UUID accountId, long amountCents, String idempotencyKey) throws SQLException, java.io.IOException {
+        if (amountCents <= 0) {
+            throw new IllegalArgumentException("Deposit amount must be positive");
+        }
+
+        try (Connection conn = Database.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try {
+                String txnSql = "INSERT INTO transactions (idempotency_key, type, status, description) " +
+                        "VALUES (?, 'DEPOSIT', 'COMPLETED', 'Deposit') RETURNING id";
+                UUID transactionId;
+                try (PreparedStatement txnStmt = conn.prepareStatement(txnSql)) {
+                    txnStmt.setString(1, idempotencyKey);
+                    ResultSet txnRs = txnStmt.executeQuery();
+                    txnRs.next();
+                    transactionId = (UUID) txnRs.getObject("id");
+                }
+
+                long currentBalance = getBalanceWithinTransaction(conn, accountId);
+                long newBalance = currentBalance + amountCents;
+
+                String ledgerSql = "INSERT INTO ledger_entries (transaction_id, account_id, amount_cents, balance_after) " +
+                        "VALUES (?, ?, ?, ?)";
+                try (PreparedStatement ledgerStmt = conn.prepareStatement(ledgerSql)) {
+                    ledgerStmt.setObject(1, transactionId);
+                    ledgerStmt.setObject(2, accountId);
+                    ledgerStmt.setLong(3, amountCents);
+                    ledgerStmt.setLong(4, newBalance);
+                    ledgerStmt.executeUpdate();
+                }
+
+                conn.commit();
+                return transactionId;
+
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            }
+        }
+    }
+
+    private long getBalanceWithinTransaction(Connection conn, UUID accountId) throws SQLException {
+        String sql = "SELECT COALESCE(SUM(amount_cents), 0) AS balance FROM ledger_entries WHERE account_id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setObject(1, accountId);
+            ResultSet rs = stmt.executeQuery();
+            rs.next();
+            return rs.getLong("balance");
+        }
+    }
+}

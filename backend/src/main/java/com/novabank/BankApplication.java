@@ -5,13 +5,17 @@ import java.util.UUID;
 public class BankApplication {
 
     public static void main(String[] args) throws Exception {
-        AccountService accountService = new AccountService();
-        UUID userId = UUID.fromString("d86a0358-6f9a-4f12-8301-51c4393be113");
+        LedgerService ledgerService = new LedgerService();
+        UUID checkingAccountId = UUID.fromString("6df565e6-8b22-4b78-b5e7-ac684b8f6423");
 
-        UUID checkingId = accountService.createAccount(userId, "CHECKING");
-        System.out.println("Created checking account: " + checkingId);
+        try {
+            ledgerService.deposit(checkingAccountId, 10000, "deposit-test-001");
+            System.out.println("Deposit succeeded (this should NOT happen)");
+        } catch (java.sql.SQLException e) {
+            System.out.println("Deposit correctly rejected: " + e.getMessage());
+        }
 
-        UUID savingsId = accountService.createAccount(userId, "SAVINGS");
-        System.out.println("Created savings account: " + savingsId);
+        long balance = ledgerService.getBalance(checkingAccountId);
+        System.out.println("Balance after retry attempt: " + balance + " cents");
     }
 }
