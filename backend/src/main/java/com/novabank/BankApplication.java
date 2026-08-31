@@ -7,18 +7,15 @@ public class BankApplication {
     public static void main(String[] args) throws Exception {
         LedgerService ledgerService = new LedgerService();
         UUID checkingAccountId = UUID.fromString("6df565e6-8b22-4b78-b5e7-ac684b8f6423");
+        UUID savingsAccountId = UUID.fromString("0a9f739c-1bac-41f1-9b57-a04916c1226d");
 
-        UUID withdrawalId = ledgerService.withdraw(checkingAccountId, 3000, "withdraw-test-001");
-        System.out.println("Withdrawal transaction id: " + withdrawalId);
-        System.out.println("Balance after withdrawal: " + ledgerService.getBalance(checkingAccountId) + " cents");
+        System.out.println("Checking before: " + ledgerService.getBalance(checkingAccountId));
+        System.out.println("Savings before: " + ledgerService.getBalance(savingsAccountId));
 
-        try {
-            ledgerService.withdraw(checkingAccountId, 999999, "withdraw-test-002");
-            System.out.println("Overdraft succeeded (this should NOT happen)");
-        } catch (IllegalStateException e) {
-            System.out.println("Overdraft correctly rejected: " + e.getMessage());
-        }
+        UUID transferId = ledgerService.transfer(checkingAccountId, savingsAccountId, 2000, "transfer-test-001");
+        System.out.println("Transfer id: " + transferId);
 
-        System.out.println("Final balance: " + ledgerService.getBalance(checkingAccountId) + " cents");
+        System.out.println("Checking after: " + ledgerService.getBalance(checkingAccountId));
+        System.out.println("Savings after: " + ledgerService.getBalance(savingsAccountId));
     }
 }

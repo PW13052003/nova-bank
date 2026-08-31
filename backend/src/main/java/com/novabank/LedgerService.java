@@ -120,4 +120,83 @@ public class LedgerService {
             }
         }
     }
+
+    private void lockAccount(Connection conn, UUID accountId) throws SQLException {
+        String sql = "SELECT id FROM accounts WHERE id = ? FOR UPDATE";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setObject(1, accountId);
+            ResultSet rs = stmt.executeQuery();
+            if (!rs.next()) {
+                throw new SQLException("Account not found: " + accountId);
+            }
+        }
+    }
+
+    public UUID transfer(UUID fromAccountId, UUID toAccountId, long amountCents, String idempotencyKey)
+            throws SQLException, java.io.IOException {
+
+        if (amountCents <= 0) {
+            throw new IllegalArgumentException("Transfer amount must be positive");
+        }
+        if (fromAccountId.equals(toAccountId)) {
+            throw new IllegalArgumentException("Cannot transfer to the same account");
+        }
+
+        try (Connection conn = Database.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try {
+                UUID firstLock = fromAccountId.compareTo(toAccountId) < 0 ? fromAccountId : toAccountId;
+                UUID secondLock = fromAccountId.compareTo(toAccountId) < 0 ? toAccountId : fromAccountId;
+
+                lockAccount(conn, firstLock);
+                lockAccount(conn, secondLock);
+
+                long fromBalance = getBalanceWithinTransaction(conn, fromAccountId);
+
+                if (fromBalance < amountCents) {
+                    conn.rollback();
+                    throw new IllegalStateException("Insufficient balance");
+                }
+
+                long toBalance = getBalanceWithinTransaction(conn, toAccountId);
+
+                String txnSql = "INSERT INTO transactions (idempotency_key, type, status, description) " +
+                        "VALUES (?, 'TRANSFER', 'COMPLETED', 'Transfer') RETURNING id";
+                UUID transactionId;
+                try (PreparedStatement txnStmt = conn.prepareStatement(txnSql)) {
+                    txnStmt.setString(1, idempotencyKey);
+                    ResultSet txnRs = txnStmt.executeQuery();
+                    txnRs.next();
+                    transactionId = (UUID) txnRs.getObject("id");
+                }
+
+                long newFromBalance = fromBalance - amountCents;
+                long newToBalance = toBalance + amountCents;
+
+                String ledgerSql = "INSERT INTO ledger_entries (transaction_id, account_id, amount_cents, balance_after) " +
+                        "VALUES (?, ?, ?, ?)";
+                try (PreparedStatement ledgerStmt = conn.prepareStatement(ledgerSql)) {
+                    ledgerStmt.setObject(1, transactionId);
+                    ledgerStmt.setObject(2, fromAccountId);
+                    ledgerStmt.setLong(3, -amountCents);
+                    ledgerStmt.setLong(4, newFromBalance);
+                    ledgerStmt.executeUpdate();
+
+                    ledgerStmt.setObject(1, transactionId);
+                    ledgerStmt.setObject(2, toAccountId);
+                    ledgerStmt.setLong(3, amountCents);
+                    ledgerStmt.setLong(4, newToBalance);
+                    ledgerStmt.executeUpdate();
+                }
+
+                conn.commit();
+                return transactionId;
+
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            }
+        }
+    }
 }
