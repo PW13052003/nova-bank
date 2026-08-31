@@ -82,6 +82,7 @@ public class LedgerService {
             conn.setAutoCommit(false);
 
             try {
+                lockAccount(conn, accountId);
                 long currentBalance = getBalanceWithinTransaction(conn, accountId);
 
                 if (currentBalance < amountCents) {
