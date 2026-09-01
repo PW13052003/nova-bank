@@ -123,9 +123,10 @@ export default function DashboardPage() {
         ) : (
           <div className="space-y-3">
             {accounts.map((account) => (
-              <div
+              <a
                 key={account.id}
-                className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm"
+                href={`/accounts/${account.id}`}
+                className="block rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-gray-300"
               >
                 <div className="flex items-center justify-between">
                   <div>
@@ -136,7 +137,7 @@ export default function DashboardPage() {
                     {formatCents(account.balanceCents)}
                   </p>
                 </div>
-              </div>
+              </a>
             ))}
           </div>
         )}
