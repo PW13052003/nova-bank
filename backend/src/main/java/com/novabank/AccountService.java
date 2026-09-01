@@ -40,7 +40,11 @@ public class AccountService {
     }
 
     public List<Map<String, Object>> getAccountsForUser(UUID userId) throws SQLException, java.io.IOException {
-        String sql = "SELECT id, account_number, account_type, status FROM accounts WHERE user_id = ?";
+        String sql = "SELECT a.id, a.account_number, a.account_type, a.status, " +
+                "COALESCE(SUM(l.amount_cents), 0) AS balance " +
+                "FROM accounts a LEFT JOIN ledger_entries l ON l.account_id = a.id " +
+                "WHERE a.user_id = ? " +
+                "GROUP BY a.id, a.account_number, a.account_type, a.status";
 
         try (Connection conn = Database.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -54,7 +58,8 @@ public class AccountService {
                         "id", rs.getObject("id").toString(),
                         "accountNumber", rs.getString("account_number"),
                         "accountType", rs.getString("account_type"),
-                        "status", rs.getString("status")
+                        "status", rs.getString("status"),
+                        "balanceCents", rs.getLong("balance")
                 ));
             }
             return accounts;
