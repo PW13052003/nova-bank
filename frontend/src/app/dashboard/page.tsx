@@ -21,6 +21,9 @@ export default function DashboardPage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newAccountType, setNewAccountType] = useState("CHECKING");
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     loadAccounts();
@@ -42,6 +45,25 @@ export default function DashboardPage() {
     router.push("/login");
   }
 
+  async function handleCreateAccount(e: React.FormEvent) {
+    e.preventDefault();
+    setCreating(true);
+    setError("");
+
+    try {
+      await apiFetch("/accounts", {
+        method: "POST",
+        body: JSON.stringify({ accountType: newAccountType }),
+      });
+      setShowCreateForm(false);
+      await loadAccounts();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create account");
+    } finally {
+      setCreating(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
@@ -55,13 +77,44 @@ export default function DashboardPage() {
       <div className="mx-auto max-w-2xl">
         <div className="mb-8 flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-gray-900">Your accounts</h1>
-          <button
-            onClick={handleLogout}
-            className="text-sm font-medium text-gray-600 hover:text-gray-900"
-          >
-            Log out
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setShowCreateForm(!showCreateForm)}
+              className="text-sm font-medium text-gray-900 underline"
+            >
+              {showCreateForm ? "Cancel" : "+ New account"}
+            </button>
+            <button
+              onClick={handleLogout}
+              className="text-sm font-medium text-gray-600 hover:text-gray-900"
+            >
+              Log out
+            </button>
+          </div>
         </div>
+
+        {showCreateForm && (
+          <form
+            onSubmit={handleCreateAccount}
+            className="mb-6 flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
+          >
+            <select
+              value={newAccountType}
+              onChange={(e) => setNewAccountType(e.target.value)}
+              className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+            >
+              <option value="CHECKING">Checking</option>
+              <option value="SAVINGS">Savings</option>
+            </select>
+            <button
+              type="submit"
+              disabled={creating}
+              className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+            >
+              {creating ? "Creating..." : "Create"}
+            </button>
+          </form>
+        )}
 
         {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
 
