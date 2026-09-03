@@ -117,11 +117,33 @@ export default function AccountDetailPage({ params }: { params: Promise<{ id: st
       setSubmitting(false);
     }
   }
-
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted">Loading...</p>
+      <div className="min-h-screen px-6 py-10">
+        <div className="mx-auto max-w-2xl animate-pulse">
+          <div className="h-4 w-28 bg-line" />
+          <div className="mt-6 mb-10">
+            <div className="h-4 w-32 bg-line" />
+            <div className="mt-3 h-10 w-40 bg-line" />
+          </div>
+          <div className="mb-10 flex gap-6 border-y border-line py-4">
+            <div className="h-4 w-14 bg-line" />
+            <div className="h-4 w-14 bg-line" />
+            <div className="h-4 w-14 bg-line" />
+          </div>
+          <div className="mb-4 h-4 w-32 bg-line" />
+          <div className="divide-y divide-line border-t border-line">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center justify-between py-4">
+                <div>
+                  <div className="h-4 w-20 bg-line" />
+                  <div className="mt-2 h-3 w-16 bg-line" />
+                </div>
+                <div className="h-4 w-14 bg-line" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
