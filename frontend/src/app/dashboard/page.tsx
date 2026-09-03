@@ -64,44 +64,56 @@ export default function DashboardPage() {
     }
   }
 
+  const totalBalance = accounts.reduce((sum, a) => sum + a.balanceCents, 0);
+
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <p className="text-gray-500">Loading...</p>
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-muted">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-6 py-10">
+    <div className="min-h-screen px-6 py-10">
       <div className="mx-auto max-w-2xl">
-        <div className="mb-8 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-gray-900">Your accounts</h1>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setShowCreateForm(!showCreateForm)}
-              className="text-sm font-medium text-gray-900 underline"
-            >
-              {showCreateForm ? "Cancel" : "+ New account"}
-            </button>
-            <button
-              onClick={handleLogout}
-              className="text-sm font-medium text-gray-600 hover:text-gray-900"
-            >
-              Log out
-            </button>
-          </div>
+        <div className="flex items-baseline justify-between">
+          <a href="/dashboard" className="font-serif text-2xl text-ink">
+            Nova Bank
+          </a>
+          <button
+            onClick={handleLogout}
+            className="text-sm text-muted hover:text-ink"
+          >
+            Log out
+          </button>
+        </div>
+        <div className="mt-6 mb-10 h-px bg-line" />
+
+        <div className="mb-10">
+          <p className="text-sm text-muted">Total balance</p>
+          <p className="mt-1 font-serif text-4xl text-ink">{formatCents(totalBalance)}</p>
+        </div>
+
+        <div className="mb-4 flex items-baseline justify-between">
+          <h2 className="text-sm text-muted">Accounts</h2>
+          <button
+            onClick={() => setShowCreateForm(!showCreateForm)}
+            className="text-sm text-ink underline underline-offset-2"
+          >
+            {showCreateForm ? "Cancel" : "+ New account"}
+          </button>
         </div>
 
         {showCreateForm && (
           <form
             onSubmit={handleCreateAccount}
-            className="mb-6 flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
+            className="mb-6 flex items-center gap-3 border-b border-line pb-6"
           >
             <select
               value={newAccountType}
               onChange={(e) => setNewAccountType(e.target.value)}
-              className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+              className="border border-line bg-transparent px-3 py-2 text-sm text-ink"
             >
               <option value="CHECKING">Checking</option>
               <option value="SAVINGS">Savings</option>
@@ -109,34 +121,30 @@ export default function DashboardPage() {
             <button
               type="submit"
               disabled={creating}
-              className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+              className="bg-ink px-4 py-2 text-sm font-medium text-paper hover:bg-ink/90 disabled:opacity-50"
             >
               {creating ? "Creating..." : "Create"}
             </button>
           </form>
         )}
 
-        {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+        {error && <p className="mb-4 text-sm text-debit">{error}</p>}
 
         {accounts.length === 0 ? (
-          <p className="text-gray-500">You don&apos;t have any accounts yet.</p>
+          <p className="text-sm text-muted">You don&apos;t have any accounts yet.</p>
         ) : (
-          <div className="space-y-3">
+          <div className="divide-y divide-line border-t border-line">
             {accounts.map((account) => (
               <a
                 key={account.id}
                 href={`/accounts/${account.id}`}
-                className="block rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-gray-300"
+                className="flex items-center justify-between py-5 transition hover:bg-ink/[0.02]"
               >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">{account.accountType}</p>
-                    <p className="text-xs text-gray-400">····{account.accountNumber.slice(-4)}</p>
-                  </div>
-                  <p className="text-xl font-semibold text-gray-900">
-                    {formatCents(account.balanceCents)}
-                  </p>
+                <div>
+                  <p className="text-sm text-ink">{account.accountType}</p>
+                  <p className="text-xs text-muted">····{account.accountNumber.slice(-4)}</p>
                 </div>
+                <p className="text-lg text-ink">{formatCents(account.balanceCents)}</p>
               </a>
             ))}
           </div>
