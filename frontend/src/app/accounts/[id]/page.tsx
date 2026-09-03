@@ -27,7 +27,11 @@ function formatCents(cents: number) {
 }
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleString();
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 export default function AccountDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -111,81 +115,77 @@ export default function AccountDetailPage({ params }: { params: Promise<{ id: st
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <p className="text-gray-500">Loading...</p>
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-muted">Loading...</p>
       </div>
     );
   }
 
   if (error || !account) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <p className="text-red-600">{error || "Account not found"}</p>
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-debit">{error || "Account not found"}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-6 py-10">
+    <div className="min-h-screen px-6 py-10">
       <div className="mx-auto max-w-2xl">
         <button
           onClick={() => router.push("/dashboard")}
-          className="mb-6 text-sm font-medium text-gray-600 hover:text-gray-900"
+          className="text-sm text-muted hover:text-ink"
         >
           ← Back to accounts
         </button>
 
-        <div className="mb-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <p className="text-sm font-medium text-gray-500">{account.accountType}</p>
-          <p className="text-xs text-gray-400">····{account.accountNumber.slice(-4)}</p>
-          <p className="mt-2 text-3xl font-semibold text-gray-900">
+        <div className="mt-6 mb-10">
+          <p className="text-sm text-muted">
+            {account.accountType} ····{account.accountNumber.slice(-4)}
+          </p>
+          <p className="mt-1 font-serif text-4xl text-ink">
             {formatCents(account.balanceCents)}
           </p>
         </div>
 
-        <div className="mb-6 flex gap-3">
+        <div className="mb-10 flex gap-6 border-y border-line py-4 text-sm">
           <button
             onClick={() => setActiveForm(activeForm === "deposit" ? null : "deposit")}
-            className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+            className={activeForm === "deposit" ? "text-ink underline underline-offset-2" : "text-muted hover:text-ink"}
           >
             Deposit
           </button>
           <button
             onClick={() => setActiveForm(activeForm === "withdraw" ? null : "withdraw")}
-            className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+            className={activeForm === "withdraw" ? "text-ink underline underline-offset-2" : "text-muted hover:text-ink"}
           >
             Withdraw
           </button>
           <button
             onClick={() => setActiveForm(activeForm === "transfer" ? null : "transfer")}
-            className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+            className={activeForm === "transfer" ? "text-ink underline underline-offset-2" : "text-muted hover:text-ink"}
           >
             Transfer
           </button>
         </div>
 
         {activeForm && (
-          <form
-            onSubmit={handleAction}
-            className="mb-6 space-y-3 rounded-lg border border-gray-200 bg-white p-5 shadow-sm"
-          >
-            <h2 className="text-sm font-semibold capitalize text-gray-900">{activeForm}</h2>
-
+          <form onSubmit={handleAction} className="mb-10 space-y-6 border-b border-line pb-10">
             {activeForm === "transfer" && (
               <div>
-                <label className="block text-sm font-medium text-gray-700">To account ID</label>
+                <label className="block text-sm text-muted">To account ID</label>
                 <input
                   type="text"
                   value={toAccountId}
                   onChange={(e) => setToAccountId(e.target.value)}
                   required
-                  className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none"
+                  className="mt-2 w-full border-0 border-b border-line bg-transparent py-1.5 text-ink focus:border-ink focus:outline-none"
                 />
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Amount (USD)</label>
+              <label className="block text-sm text-muted">Amount (USD)</label>
               <input
                 type="number"
                 step="0.01"
@@ -193,42 +193,35 @@ export default function AccountDetailPage({ params }: { params: Promise<{ id: st
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 required
-                className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none"
+                className="mt-2 w-full border-0 border-b border-line bg-transparent py-1.5 text-ink focus:border-ink focus:outline-none"
               />
             </div>
 
-            {actionError && <p className="text-sm text-red-600">{actionError}</p>}
+            {actionError && <p className="text-sm text-debit">{actionError}</p>}
 
             <button
               type="submit"
               disabled={submitting}
-              className="w-full rounded-md bg-gray-900 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+              className="bg-ink px-6 py-2.5 text-sm font-medium text-paper hover:bg-ink/90 disabled:opacity-50"
             >
               {submitting ? "Processing..." : `Confirm ${activeForm}`}
             </button>
           </form>
         )}
 
-        <h2 className="mb-3 text-lg font-semibold text-gray-900">Transaction history</h2>
+        <h2 className="mb-4 text-sm text-muted">Transaction history</h2>
 
         {transactions.length === 0 ? (
-          <p className="text-sm text-gray-500">No transactions yet.</p>
+          <p className="text-sm text-muted">No transactions yet.</p>
         ) : (
-          <div className="space-y-2">
+          <div className="divide-y divide-line border-t border-line">
             {transactions.map((txn) => (
-              <div
-                key={txn.transactionId}
-                className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
-              >
+              <div key={txn.transactionId} className="flex items-center justify-between py-4">
                 <div>
-                  <p className="text-sm font-medium text-gray-900">{txn.type}</p>
-                  <p className="text-xs text-gray-400">{formatDate(txn.createdAt)}</p>
+                  <p className="text-sm text-ink">{txn.type}</p>
+                  <p className="text-xs text-muted">{formatDate(txn.createdAt)}</p>
                 </div>
-                <p
-                  className={`text-sm font-semibold ${
-                    txn.amountCents >= 0 ? "text-green-600" : "text-red-600"
-                  }`}
-                >
+                <p className={txn.amountCents >= 0 ? "text-sm text-credit" : "text-sm text-debit"}>
                   {txn.amountCents >= 0 ? "+" : ""}
                   {formatCents(txn.amountCents)}
                 </p>
