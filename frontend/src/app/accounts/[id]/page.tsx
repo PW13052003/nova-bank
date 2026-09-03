@@ -43,6 +43,7 @@ export default function AccountDetailPage({ params }: { params: Promise<{ id: st
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionError, setActionError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const [activeForm, setActiveForm] = useState<"deposit" | "withdraw" | "transfer" | null>(null);
   const [amount, setAmount] = useState("");
@@ -86,6 +87,8 @@ export default function AccountDetailPage({ params }: { params: Promise<{ id: st
 
     const amountCents = Math.round(parseFloat(amount) * 100);
     const idempotencyKey = crypto.randomUUID();
+    const actionLabel =
+      activeForm === "deposit" ? "Deposit" : activeForm === "withdraw" ? "Withdrawal" : "Transfer";
 
     try {
       if (activeForm === "deposit") {
@@ -106,6 +109,8 @@ export default function AccountDetailPage({ params }: { params: Promise<{ id: st
       }
       resetForm();
       await loadData();
+      setSuccessMessage(`${actionLabel} of ${formatCents(amountCents)} completed`);
+      setTimeout(() => setSuccessMessage(""), 4000);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Action failed");
     } finally {
@@ -138,6 +143,12 @@ export default function AccountDetailPage({ params }: { params: Promise<{ id: st
         >
           ← Back to accounts
         </button>
+
+        {successMessage && (
+          <div className="mt-6 border-l-2 border-credit pl-3 text-sm text-credit">
+            {successMessage}
+          </div>
+        )}
 
         <div className="mt-6 mb-10">
           <p className="text-sm text-muted">
