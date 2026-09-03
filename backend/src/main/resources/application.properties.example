@@ -2,3 +2,4 @@ spring.datasource.url=jdbc:postgresql://localhost:5432/novabank
 spring.datasource.username=novabank_user
 spring.datasource.password=changeme
 spring.datasource.driver-class-name=org.postgresql.Driver
+jwt.secret=REPLACE_WITH_YOUR_OWN_RANDOM_SECRET_MIN_32_CHARS
