@@ -29,6 +29,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
 
         if (path.equals("/auth/login") || path.equals("/auth/signup")) {
+            System.out.println("RATE-DIAG remoteAddr=" + request.getRemoteAddr()
+                    + " xff=" + request.getHeader("X-Forwarded-For")
+                    + " path=" + path);
+
             String key = request.getRemoteAddr() + ":" + path;
             long now = System.currentTimeMillis();
 
