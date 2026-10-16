@@ -4,12 +4,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.3.4</version>
         <relativePath/>
     </parent>
+
     <groupId>com.novabank</groupId>
     <artifactId>nova-bank-backend</artifactId>
     <version>0.1.0</version>
@@ -72,6 +74,18 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <environmentVariables>
+                        <DATABASE_URL>jdbc:postgresql://localhost:5432/novabank_test</DATABASE_URL>
+                        <DATABASE_USERNAME>novabank_user</DATABASE_USERNAME>
+                        <DATABASE_PASSWORD>unused-local-trust-auth</DATABASE_PASSWORD>
+                    </environmentVariables>
+                </configuration>
             </plugin>
         </plugins>
     </build>
