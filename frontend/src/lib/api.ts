@@ -10,14 +10,16 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
     },
   });
 
-  if (response.status === 401 || response.status === 403) {
+  const data = await response.json().catch(() => null);
+
+  const isAuthCall = path.startsWith("/auth/");
+
+  if ((response.status === 401 || response.status === 403) && !isAuthCall) {
     if (typeof window !== "undefined" && window.location.pathname !== "/login") {
       window.location.href = "/login?expired=true";
     }
     throw new Error("Session expired");
   }
-
-  const data = await response.json().catch(() => null);
 
   if (!response.ok) {
     throw new Error(data?.error || "Request failed");

@@ -105,12 +105,17 @@ export default function DashboardPage() {
           <a href="/dashboard" className="font-serif text-2xl text-ink">
             Nova Bank
           </a>
-          <button
-            onClick={handleLogout}
-            className="text-sm text-muted hover:text-ink"
-          >
-            Log out
-          </button>
+          <div className="flex items-baseline gap-6">
+            <a href="/security" className="text-sm text-muted hover:text-ink">
+              Security
+            </a>
+            <button
+              onClick={handleLogout}
+              className="text-sm text-muted hover:text-ink"
+            >
+              Log out
+            </button>
+          </div>
         </div>
         <div className="mt-6 mb-10 h-px bg-line" />
 
