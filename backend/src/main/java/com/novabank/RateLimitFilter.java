@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
@@ -22,6 +23,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     static final int EDGE_LIMIT = 20;
     static final long WINDOW_MS = 60_000;
     static final int MAX_TRACKED_KEYS = 10_000;
+    static final Set<String> LIMITED_PATHS = Set.of("/auth/login", "/auth/signup", "/auth/2fa/verify");
 
     private final ConcurrentHashMap<String, Deque<Long>> requestLog = new ConcurrentHashMap<>();
 
@@ -31,8 +33,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
                                      @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         String path = request.getRequestURI();
-        boolean limited = "POST".equals(request.getMethod())
-                && (path.equals("/auth/login") || path.equals("/auth/signup"));
+        boolean limited = "POST".equals(request.getMethod()) && LIMITED_PATHS.contains(path);
 
         if (limited) {
             String[] keys = clientKeys(request.getHeader("X-Forwarded-For"), request.getRemoteAddr());
