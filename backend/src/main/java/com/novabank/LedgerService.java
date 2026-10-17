@@ -56,6 +56,11 @@ public class LedgerService {
                     ledgerStmt.executeUpdate();
                 }
 
+                String metadata = String.format(
+                        "{\"transactionId\":\"%s\",\"accountId\":\"%s\",\"amountCents\":%d}",
+                        transactionId, accountId, amountCents);
+                writeAudit(conn, accountId, "TRANSACTION_DEPOSIT", metadata);
+
                 conn.commit();
                 return transactionId;
 
@@ -73,6 +78,20 @@ public class LedgerService {
             ResultSet rs = stmt.executeQuery();
             rs.next();
             return rs.getLong("balance");
+        }
+    }
+
+    private void writeAudit(Connection conn, UUID ownerAccountId, String eventType, String metadataJson)
+            throws SQLException {
+        String sql = "INSERT INTO audit_log (user_id, event_type, metadata) " +
+                "SELECT user_id, ?, ?::jsonb FROM accounts WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, eventType);
+            stmt.setString(2, metadataJson);
+            stmt.setObject(3, ownerAccountId);
+            if (stmt.executeUpdate() != 1) {
+                throw new SQLException("Audit entry was not written for account: " + ownerAccountId);
+            }
         }
     }
 
@@ -114,6 +133,11 @@ public class LedgerService {
                     ledgerStmt.setLong(4, newBalance);
                     ledgerStmt.executeUpdate();
                 }
+
+                String metadata = String.format(
+                        "{\"transactionId\":\"%s\",\"accountId\":\"%s\",\"amountCents\":%d}",
+                        transactionId, accountId, amountCents);
+                writeAudit(conn, accountId, "TRANSACTION_WITHDRAWAL", metadata);
 
                 conn.commit();
                 return transactionId;
@@ -193,6 +217,11 @@ public class LedgerService {
                     ledgerStmt.setLong(4, newToBalance);
                     ledgerStmt.executeUpdate();
                 }
+
+                String metadata = String.format(
+                        "{\"transactionId\":\"%s\",\"fromAccountId\":\"%s\",\"toAccountId\":\"%s\",\"amountCents\":%d}",
+                        transactionId, fromAccountId, toAccountId, amountCents);
+                writeAudit(conn, fromAccountId, "TRANSACTION_TRANSFER", metadata);
 
                 conn.commit();
                 return transactionId;
