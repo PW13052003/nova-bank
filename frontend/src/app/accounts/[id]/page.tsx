@@ -39,6 +39,7 @@ export default function AccountDetailPage({ params }: { params: Promise<{ id: st
   const router = useRouter();
 
   const [account, setAccount] = useState<Account | null>(null);
+  const [otherAccounts, setOtherAccounts] = useState<Account[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -63,6 +64,7 @@ export default function AccountDetailPage({ params }: { params: Promise<{ id: st
         return;
       }
       setAccount(found);
+      setOtherAccounts(accounts.filter((a) => a.id !== id));
 
       const history = await apiFetch(`/accounts/${id}/transactions`);
       setTransactions(history);
@@ -117,6 +119,11 @@ export default function AccountDetailPage({ params }: { params: Promise<{ id: st
       setSubmitting(false);
     }
   }
+
+  const transferBlocked = activeForm === "transfer" && otherAccounts.length === 0;
+  const submitDisabled =
+    submitting || transferBlocked || (activeForm === "transfer" && toAccountId === "");
+
   if (loading) {
     return (
       <div className="min-h-screen px-6 py-10">
@@ -206,14 +213,26 @@ export default function AccountDetailPage({ params }: { params: Promise<{ id: st
           <form onSubmit={handleAction} className="mb-10 space-y-6 border-b border-line pb-10">
             {activeForm === "transfer" && (
               <div>
-                <label className="block text-sm text-muted">To account ID</label>
-                <input
-                  type="text"
-                  value={toAccountId}
-                  onChange={(e) => setToAccountId(e.target.value)}
-                  required
-                  className="mt-2 w-full border-0 border-b border-line bg-transparent py-1.5 text-ink focus:border-ink focus:outline-none"
-                />
+                <label className="block text-sm text-muted">To account</label>
+                {otherAccounts.length === 0 ? (
+                  <p className="mt-2 text-sm text-muted">
+                    You need a second account to transfer between. Go back and create one first.
+                  </p>
+                ) : (
+                  <select
+                    value={toAccountId}
+                    onChange={(e) => setToAccountId(e.target.value)}
+                    required
+                    className="mt-2 w-full border-0 border-b border-line bg-transparent py-1.5 text-ink focus:border-ink focus:outline-none"
+                  >
+                    <option value="">Select an account</option>
+                    {otherAccounts.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.accountType} ····{a.accountNumber.slice(-4)} ({formatCents(a.balanceCents)})
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
             )}
 
@@ -234,7 +253,7 @@ export default function AccountDetailPage({ params }: { params: Promise<{ id: st
 
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitDisabled}
               className="bg-ink px-6 py-2.5 text-sm font-medium text-paper hover:bg-ink/90 disabled:opacity-50"
             >
               {submitting ? "Processing..." : `Confirm ${activeForm}`}
