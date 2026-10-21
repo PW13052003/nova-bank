@@ -49,9 +49,6 @@ jobs:
       - name: Install
         working-directory: frontend
         run: npm ci
-      - name: Type check
-        working-directory: frontend
-        run: npx tsc --noEmit
-      - name: Build
+      - name: Build and type check
         working-directory: frontend
         run: npm run build
