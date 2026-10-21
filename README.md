@@ -15,6 +15,14 @@ The demo account is shared and holds only test data. Please don't turn on two-fa
 
 The backend runs on a free hosting tier that sleeps when idle, so the first request after a quiet period can take up to a minute.
 
+## Screenshots
+
+| Log in | Dashboard |
+|---|---|
+| ![Log in page](docs/screenshots/login.png) | ![Dashboard with three accounts and a total balance](docs/screenshots/dashboard.png) |
+
+![Checking account with transaction history](docs/screenshots/account.png)
+
 ## What it does
 
 - Sign up, log in and log out
@@ -67,6 +75,7 @@ The backend runs on a free hosting tier that sleeps when idle, so the first requ
 nova-bank/
   .github/     CI workflow
   backend/     Spring Boot API, Dockerfile, tests
+  docs/        Screenshots used in this README
   frontend/    Next.js app
   database/    schema.sql
 ```
