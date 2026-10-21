@@ -1,5 +1,7 @@
 # Nova Bank
 
+[![CI](https://github.com/PW13052003/nova-bank/actions/workflows/ci.yml/badge.svg)](https://github.com/PW13052003/nova-bank/actions/workflows/ci.yml)
+
 A full-stack banking application built from scratch to show how backend, database and security concerns fit together in a financial system.
 
 **Live demo:** https://nova-bank-beta.vercel.app
@@ -30,6 +32,7 @@ The backend runs on a free hosting tier that sleeps when idle, so the first requ
 | Frontend | Next.js 16, TypeScript, Tailwind CSS |
 | Hosting | Render (backend, Docker), Vercel (frontend), Neon (database) |
 | Tests | JUnit 5, Spring MockMvc |
+| CI | GitHub Actions |
 
 ## Design decisions
 
@@ -62,6 +65,7 @@ The backend runs on a free hosting tier that sleeps when idle, so the first requ
 
 ```
 nova-bank/
+  .github/     CI workflow
   backend/     Spring Boot API, Dockerfile, tests
   frontend/    Next.js app
   database/    schema.sql
@@ -133,6 +137,10 @@ mvn test
 
 The Maven configuration points the tests at `novabank_test` automatically, and the test base class refuses to run against any database whose name doesn't contain `novabank_test`. The suite has 59 tests covering authentication, the ledger, concurrency, audit logging, token scopes, two-factor login, and the rate limiter.
 
+## Continuous integration
+
+A GitHub Actions workflow runs on every push to `main` and on pull requests. The backend job starts a PostgreSQL container, loads the schema into a test database and runs the full test suite. The frontend job installs dependencies from the lockfile and runs a production build, which includes type checking.
+
 ## Deployment
 
 | Service | Role | Configuration |
@@ -153,6 +161,6 @@ The frontend calls `/api/...` on its own domain and Vercel forwards those reques
 - There are no refresh tokens. Sessions last 15 minutes, then the user logs in again.
 - The free hosting tiers sleep when idle, and the free Neon database expires if not upgraded.
 - Transfers are limited to a user's own accounts.
-- Backend deploys are triggered manually on Render.
-- There is no continuous integration pipeline. Tests run locally.
+- Backend deploys are triggered manually on Render, and CI does not deploy.
+- There are no frontend tests. CI only type-checks and builds the frontend.
 - `npm audit` reports vulnerabilities in frontend dependencies that haven't been investigated.
